@@ -18,6 +18,7 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.telephony.SmsMessage;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -26,15 +27,25 @@ import com.wusy.smsproject.BaseApplication;
 import com.wusy.smsproject.R;
 import com.wusy.smsproject.base.BaseParamas;
 import com.wusy.smsproject.entity.BankCardEntity;
+import com.wusy.smsproject.entity.HttpResult;
 import com.wusy.smsproject.entity.LogEntity;
 import com.wusy.smsproject.entity.LogTaskEntity;
+import com.wusy.smsproject.entity.UserInfo;
 import com.wusy.smsproject.httpinterfaces.CallBackInterface;
+import com.wusy.smsproject.httpinterfaces.PostInterface;
 import com.wusy.smsproject.utils.BankUtils;
+import com.wusy.smsproject.utils.SPUtils;
 import com.wusy.smsproject.utils.db.DatabaseUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends FragmentActivity {
 
@@ -132,6 +143,7 @@ public class MainActivity extends FragmentActivity {
 
 
         startRepeatingTask();
+        startRepeatingVerify();
     }
 
 
@@ -144,15 +156,23 @@ public class MainActivity extends FragmentActivity {
         if(mUploadReceiver != null){
             unregisterReceiver(mUploadReceiver);
         }
+        // 清除掉所有上传任务
+        cancelAllTask();
+
         Intent alarmIntent = new Intent();
         alarmIntent.setAction(UploadReceiver.ALARM_WAKE_ACTION);
         PendingIntent operation = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+        Intent alarmIntent2 = new Intent();
+        alarmIntent2.setAction(VerifyReceiver.ALARM_WAKE_ACTION_VERIFY);
+        PendingIntent operation2 = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         if(alarmManager != null){
             // 取消掉定时任务
             alarmManager.cancel(operation);
+            alarmManager.cancel(operation2);
         }
-
     }
 
     /**
@@ -321,6 +341,31 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    private void startRepeatingVerify(){
+        Intent alarmIntent = new Intent();
+        alarmIntent.setAction(VerifyReceiver.ALARM_WAKE_ACTION_VERIFY);
+        PendingIntent operation = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if(alarmManager != null){
+            alarmManager.cancel(operation);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 10 * 60 * 1000, operation);
+        }
+    }
+
+    public class VerifyReceiver extends BroadcastReceiver {
+
+        public static final String ALARM_WAKE_ACTION_VERIFY = "wusy.verifytask.ALARM_WAKE_ACTION";
+
+        public VerifyReceiver() {
+
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            verifyAccout();
+        }
+    }
+
     // 接受任务提醒
     public class UploadReceiver extends BroadcastReceiver {
 
@@ -397,7 +442,45 @@ public class MainActivity extends FragmentActivity {
         if(isToken){
             Toast.makeText(BaseApplication.getCurApplicationContext(), "token失效，请重新登录!", Toast.LENGTH_SHORT).show();
         }
-        startActivity(new Intent(MainActivity.this, LoginActivity.class));
+        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+        intent.putExtra("isLogout", true);
+        startActivity(intent);
         finish();
+    }
+
+    public void verifyAccout(){
+        String localToken = SPUtils.getStringParam(MainActivity.this, SPUtils.KEY_TOKEN);
+        // TOKEN 如果为空，则是出现异常，返回重新登录
+        if(TextUtils.isEmpty(localToken)){
+            toLoginActivity(true);
+            return;
+        }
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BaseParamas.BASE_URL) // 设置 网络请求 Url
+                .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
+                .build();
+
+        PostInterface request = retrofit.create(PostInterface.class);
+        Call<HttpResult> call = request.verify(localToken);
+        call.enqueue(new Callback<HttpResult>() {
+
+            @Override
+            public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
+                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                    SPUtils.saveParam(MainActivity.this, SPUtils.KEY_TOKEN, response.body().getToken());
+                }else{
+                    // 返回结果失败的话，直接返回登录页面重新登录
+                    toLoginActivity(true);
+                }
+            }
+
+            //请求失败时回调
+            @Override
+            public void onFailure(Call<HttpResult> call, Throwable throwable) {
+                System.out.println("请求失败");
+                System.out.println(throwable.getMessage());
+            }
+        });
     }
 }
