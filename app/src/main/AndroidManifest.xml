@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.wusy.smsproject">
+
+    <!-- 发送短信 -->
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <!-- 读取短信 -->
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    <!-- 接收短信 -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application
+        android:name=".BaseApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <activity android:name=".ui.MainActivity">
+
+        </activity>
+
+        <activity android:name=".ui.LoginActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--<receiver android:name=".ui.SmsReceiver" android:permission="android.permission.BROADCAST_SMS">-->
+            <!--<intent-filter android:priority="2147483647">-->
+                <!--<action android:name="android.provider.Telephony.SMS_DELIVER" />-->
+                <!--<action android:name="android.provider.Telephony.SMS_RECEIVED" />-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
+
+        <!--<receiver-->
+            <!--android:name=".ui.MainActivity$UploadReceiver"-->
+            <!--android:exported="false">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="wusy.uploadtask.ALARM_WAKE_ACTION" />-->
+            <!--</intent-filter>-->
+        <!--</receiver>-->
+
+
+    </application>
+
+</manifest>
