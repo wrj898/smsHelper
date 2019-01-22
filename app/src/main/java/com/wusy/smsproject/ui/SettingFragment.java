@@ -10,6 +10,7 @@ import android.text.method.DigitsKeyListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -56,6 +57,13 @@ public class SettingFragment extends Fragment {
         bankCardAdapter = new BankCardAdapter(getContext(), list);
         bankcardList.setAdapter(bankCardAdapter);
 
+        bankcardList.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                // TODO 长按删除
+                return false;
+            }
+        });
         return view;
     }
 
