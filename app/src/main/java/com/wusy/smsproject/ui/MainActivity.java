@@ -263,7 +263,7 @@ public class MainActivity extends FragmentActivity {
                     logEntity.setCardNumber(curBankCard.getCardNumber());
                     logEntity.setUserKey(BaseApplication.getCurUserName());
                     logEntity.setTime(String.valueOf(msgDate));
-                    logEntity.setMoney(BankUtils.getMoneyFromSMS(content));
+                    logEntity.setMoney(BankUtils.getMoneyFromSMS(sender,content));
                     logEntity.setState(BaseParamas.STATE_WITHOUT_UPLOAD);
                     DatabaseUtils.insertLog(BaseApplication.getCurApplicationContext(), logEntity);
                     // TODO 加入页面刷新

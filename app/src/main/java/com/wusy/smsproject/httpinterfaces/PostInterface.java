@@ -7,6 +7,7 @@ import retrofit2.Call;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
+import retrofit2.http.Query;
 
 public interface PostInterface {
 
@@ -35,10 +36,11 @@ public interface PostInterface {
 //    note string 银行名字
 //    app_id string 银行卡号
 //      {code:1} 1.成功2.其他 注：成功后请求/list接口重新获取列表
+
     @FormUrlEncoded
     @POST("add")
     Call<HttpResult> addBankCard(@Field("token") String token, @Field("name") String name,
-                                 @Field("user_id") int user_id, @Field("code") String code,
+                                 @Field("user_id") String user_id, @Field("code") String code,
                                  @Field("note") String note, @Field("app_id") String app_id);
 
 

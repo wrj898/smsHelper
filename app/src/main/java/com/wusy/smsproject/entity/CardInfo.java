@@ -9,7 +9,7 @@ public class CardInfo {
     private String key;
     private boolean validated;
     private String stat;
-    private String messages;
+//    private String messages;
 
     public String getCardType() {
         return cardType;
@@ -51,11 +51,11 @@ public class CardInfo {
         this.stat = stat;
     }
 
-    public String getMessages() {
-        return messages;
-    }
-
-    public void setMessages(String messages) {
-        this.messages = messages;
-    }
+//    public String getMessages() {
+//        return messages;
+//    }
+//
+//    public void setMessages(String messages) {
+//        this.messages = messages;
+//    }
 }
