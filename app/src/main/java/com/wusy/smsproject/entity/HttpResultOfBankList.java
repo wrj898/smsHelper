@@ -5,7 +5,7 @@ import java.util.List;
 public class HttpResultOfBankList {
 
     private int code;
-    private List<NewBankCardEntity> cardlist;
+    private List<NewBankCardEntity> cardList;
 
     public int getCode() {
         return code;
@@ -15,11 +15,11 @@ public class HttpResultOfBankList {
         this.code = code;
     }
 
-    public List<NewBankCardEntity> getCardlist() {
-        return cardlist;
+    public List<NewBankCardEntity> getCardList() {
+        return cardList;
     }
 
-    public void setCardlist(List<NewBankCardEntity> cardlist) {
-        this.cardlist = cardlist;
+    public void setCardList(List<NewBankCardEntity> cardList) {
+        this.cardList = cardList;
     }
 }
