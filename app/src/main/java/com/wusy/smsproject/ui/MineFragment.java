@@ -30,7 +30,9 @@ public class MineFragment extends Fragment{
             @Override
             public void onClick(View v) {
                 if(getContext() != null && getActivity() != null){
-                    getContext().startActivity(new Intent(getContext(), LoginActivity.class));
+                    Intent intent = new Intent(getContext(), LoginActivity.class);
+                    intent.putExtra("isLogout", true);
+                    getContext().startActivity(intent);
                     getActivity().finish();
                 }
             }

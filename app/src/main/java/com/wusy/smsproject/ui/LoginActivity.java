@@ -10,7 +10,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -34,6 +36,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextView btnLogin;
     private EditText etUserName;
     private EditText etPassword;
+    private CheckBox cbRember;
 
     // 短信权限请求码
     private final static int REQUEST_SMS_CODE = 300;
@@ -52,23 +55,30 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btn_login);
         etUserName = findViewById(R.id.et_login_name);
         etPassword = findViewById(R.id.et_login_psw);
+        cbRember = findViewById(R.id.login_remberpwd);
+
+        boolean isRember = SPUtils.getBooleanParam(LoginActivity.this, SPUtils.KEY_ISREMBER);
+        cbRember.setChecked(isRember);
+        if(isRember){
+            etUserName.setText(SPUtils.getStringParam(LoginActivity.this, SPUtils.KEY_USER_NAME));
+            etPassword.setText(SPUtils.getStringParam(LoginActivity.this, SPUtils.KEY_USER_PWD));
+        }
+        Log.e("wusy111", "initViews = " + isRember);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                toMainActivity();
-                String localToken = SPUtils.getStringParam(LoginActivity.this, SPUtils.KEY_TOKEN);
-                if(TextUtils.isEmpty(localToken)){
-                    // 没有token的话，就直接登录
-                    loginAccout();
-                }else{
-                    verifyAccout(localToken);
-                }
+                loginAccout();
             }
         });
     }
 
     public void autoLogin(){
+        Intent intent = getIntent();
+        // 如果是注销的话 就不进行自动登录操作
+        if(intent != null && intent.getBooleanExtra("isLogout", false)){
+            return;
+        }
         String localToken = SPUtils.getStringParam(LoginActivity.this, SPUtils.KEY_TOKEN);
         if(!TextUtils.isEmpty(localToken)){
             verifyAccout(localToken);
@@ -103,6 +113,14 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
                 if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_TOKEN, response.body().getToken());
+                    boolean isRember = cbRember.isChecked();
+                    Log.e("wusy111", "onResponse = " + isRember);
+                    if(isRember){
+                        SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_USER_NAME, etUserName.getText().toString());
+                        SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_USER_PWD, etPassword.getText().toString());
+                    }
+                    SPUtils.saveBooleanParam(LoginActivity.this, SPUtils.KEY_ISREMBER, isRember);
+
                     UserInfo userInfo = new UserInfo();
                     userInfo.setUserName(response.body().getUsername());
                     userInfo.setToken(response.body().getToken());
@@ -118,9 +136,7 @@ public class LoginActivity extends AppCompatActivity {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
-                Toast.makeText(LoginActivity.this, "请求失败2=" + throwable.getMessage() , Toast.LENGTH_SHORT).show();
-                System.out.println("请求失败");
-                System.out.println(throwable.getMessage());
+                Toast.makeText(LoginActivity.this, "请求失败 : " + throwable.getMessage() , Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -152,8 +168,7 @@ public class LoginActivity extends AppCompatActivity {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
-                System.out.println("请求失败");
-                System.out.println(throwable.getMessage());
+                Toast.makeText(LoginActivity.this, "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
