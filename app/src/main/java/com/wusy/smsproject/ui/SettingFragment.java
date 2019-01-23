@@ -146,6 +146,8 @@ public class SettingFragment extends Fragment {
         final View view = factory.inflate(R.layout.dialog_bankcard, null);
         final EditText etName = view.findViewById(R.id.et_bankcard_name);
         final EditText etCardNo = view.findViewById(R.id.et_bankcard_cardno);
+        etName.setText("测试号");
+        etCardNo.setText("6217001930028895283");
         if(isEdit && bankCardEntity != null){
             etName.setText(bankCardEntity.getName());
             etCardNo.setText(bankCardEntity.getApp_id());
@@ -222,8 +224,7 @@ public class SettingFragment extends Fragment {
                         Toast.makeText(getContext(), "请输入正确的银行卡号", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    Toast.makeText(getContext(), "银行卡信息查询接口返回状态:" + response.body().getStat() +
-                            ", 错误信息:" + response.body().getMessages(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "银行卡信息查询接口返回状态:" + response.body().getStat(), Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -253,11 +254,8 @@ public class SettingFragment extends Fragment {
 
         String token = SPUtils.getStringParam(getContext(), SPUtils.KEY_TOKEN);
         String userId = BaseApplication.getCurUserName();
-        if(TextUtils.isEmpty(userId)){
-            Toast.makeText(getContext(), "userId 出现异常。请重新登录", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Call<HttpResult> call = request.addBankCard(token, name, Integer.valueOf(userId), bankCode,bankName, cardNo);
+
+        Call<HttpResult> call = request.addBankCard(token, name, userId, bankCode,bankName, cardNo);
         call.enqueue(new Callback<HttpResult>() {
 
             @Override
@@ -401,6 +399,7 @@ public class SettingFragment extends Fragment {
                     }else{
                         MainActivity.bankcardList.clear();
                     }
+                    Toast.makeText(getContext(), "刷新银行卡列表成功" + response.body().getCode(), Toast.LENGTH_SHORT).show();
                     MainActivity.bankcardList.addAll(response.body().getCardList());
                     bankCardAdapter.notifyDataSetChanged();
                 }else{

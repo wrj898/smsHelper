@@ -54,12 +54,14 @@ public class BankCardAdapter extends BaseAdapter {
             holder.cardno = convertView.findViewById(R.id.bankcard_cardno);
             holder.btnEdit = convertView.findViewById(R.id.bankcard_edit);
             holder.btnChange = convertView.findViewById(R.id.bankcard_change);
+            holder.username = convertView.findViewById(R.id.bankcard_username);
             convertView.setTag(holder);
         }else{
             holder = (ViewHolder)convertView.getTag();
         }
         holder.bankname.setText(list.get(position).getNote());
         holder.cardno.setText(list.get(position).getApp_id());
+        holder.username.setText(list.get(position).getName());
         holder.btnEdit.setTag(position);
         holder.btnChange.setTag(position);
 
@@ -93,6 +95,7 @@ public class BankCardAdapter extends BaseAdapter {
         public TextView cardno;
         public TextView btnEdit;
         public TextView btnChange;
+        public TextView username;
     }
 
     private void changeViewShow(int position, TextView tvChange){

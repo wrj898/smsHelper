@@ -20,6 +20,14 @@
             android:textSize="18sp"/>
 
         <TextView
+            android:id="@+id/bankcard_username"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"
+            android:layout_below="@id/bankcard_name"
+            android:layout_marginTop="5dp"/>
+
+        <TextView
             android:id="@+id/bankcard_change"
             android:layout_width="80dp"
             android:layout_height="wrap_content"
@@ -28,7 +36,8 @@
             android:text="锁定"
             android:gravity="center"
             android:textSize="18sp"
-            android:padding="15dp"/>
+            android:padding="15dp"
+            android:layout_centerVertical="true"/>
         <TextView
             android:id="@+id/bankcard_edit"
             android:layout_width="80dp"
@@ -38,16 +47,18 @@
             android:gravity="center"
             android:textSize="18sp"
             android:layout_toLeftOf="@id/bankcard_change"
-            android:padding="15dp"/>
+            android:padding="15dp"
+            android:layout_centerVertical="true"/>
 
         <TextView
             android:id="@+id/bankcard_cardno"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="@android:color/black"
-            android:layout_below="@id/bankcard_name"
+            android:layout_below="@id/bankcard_username"
             android:layout_toLeftOf="@id/bankcard_edit"
-            android:layout_marginRight="10dp"/>
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="5dp"/>
     </RelativeLayout>
 
 </LinearLayout>
