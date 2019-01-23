@@ -42,7 +42,12 @@ public class LogTaskEntity {
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
                 Log.e("wusy","onResponse ");
-                callback(logEntity, response.body().getCode());
+                if(response.body() != null){
+                    callback(logEntity, response.body().getCode());
+                }else{
+                    callback(logEntity, BaseParamas.REQUEST_OTHER);
+                }
+
             }
 
             //请求失败时回调

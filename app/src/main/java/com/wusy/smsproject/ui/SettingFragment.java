@@ -205,6 +205,10 @@ public class SettingFragment extends Fragment {
 
             @Override
             public void onResponse(Call<CardInfo> call, Response<CardInfo> response) {
+                if(response.body() == null){
+                    Toast.makeText(getContext(), "验证银行卡号 网络请求错误", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if("ok".equals(response.body().getStat()) && response.body().isValidated()){
                     // 为空则为添加
                     if(bankCardEntity == null){
@@ -254,6 +258,10 @@ public class SettingFragment extends Fragment {
 
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
+                if(response.body() == null){
+                    Toast.makeText(getContext(), "上传银行卡信息 网络请求错误", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 // 成功
                 if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     getBankCardList();
@@ -291,6 +299,10 @@ public class SettingFragment extends Fragment {
 
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
+                if(response.body() == null){
+                    Toast.makeText(getContext(), "删除银行卡 网络请求错误", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 // 成功
                 if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     getBankCardList();
@@ -333,6 +345,10 @@ public class SettingFragment extends Fragment {
 
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
+                if(response.body() == null){
+                    Toast.makeText(getContext(), "编辑银行卡 网络请求错误", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 // 成功
                 if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     getBankCardList();
@@ -369,8 +385,13 @@ public class SettingFragment extends Fragment {
 
             @Override
             public void onResponse(Call<HttpResultOfBankList> call, Response<HttpResultOfBankList> response) {
+                if(response.body() == null){
+                    Toast.makeText(getContext(), "获取银行卡列表 : 网络请求错误 ", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 // 成功
-                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     if(MainActivity.bankcardList == null){
                         MainActivity.bankcardList = new ArrayList<>();
                     }else{
