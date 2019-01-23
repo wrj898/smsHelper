@@ -205,7 +205,7 @@ public class SettingFragment extends Fragment {
 
             @Override
             public void onResponse(Call<CardInfo> call, Response<CardInfo> response) {
-                if("ok".equals(response.body().getStat()) && response.body().isValidated()){
+                if(response.body() != null && "ok".equals(response.body().getStat()) && response.body().isValidated()){
                     // 为空则为添加
                     if(bankCardEntity == null){
                         addBankCard(name, response.body().getBank(), BankUtils.getNameOfBank(response.body().getBank()), cardNo);
@@ -255,7 +255,7 @@ public class SettingFragment extends Fragment {
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
                 // 成功
-                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     getBankCardList();
                 }else{
                     // 失败处理
@@ -292,7 +292,7 @@ public class SettingFragment extends Fragment {
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
                 // 成功
-                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     getBankCardList();
                 }else{
                     // 失败处理
@@ -334,7 +334,7 @@ public class SettingFragment extends Fragment {
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
                 // 成功
-                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     getBankCardList();
                 }else{
                     // 失败处理
@@ -370,7 +370,7 @@ public class SettingFragment extends Fragment {
             @Override
             public void onResponse(Call<HttpResultOfBankList> call, Response<HttpResultOfBankList> response) {
                 // 成功
-                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     if(MainActivity.bankcardList == null){
                         MainActivity.bankcardList = new ArrayList<>();
                     }else{

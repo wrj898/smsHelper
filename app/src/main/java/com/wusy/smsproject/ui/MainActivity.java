@@ -471,7 +471,7 @@ public class MainActivity extends FragmentActivity {
 
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
-                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     SPUtils.saveParam(MainActivity.this, SPUtils.KEY_TOKEN, response.body().getToken());
                 }else{
                     // 返回结果失败的话，直接返回登录页面重新登录

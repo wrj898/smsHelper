@@ -111,7 +111,7 @@ public class LoginActivity extends AppCompatActivity {
             //请求成功时回调
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
-                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_TOKEN, response.body().getToken());
                     boolean isRember = cbRember.isChecked();
                     Log.e("wusy111", "onResponse = " + isRember);
@@ -154,7 +154,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
-                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_TOKEN, response.body().getToken());
                     UserInfo userInfo = new UserInfo();
                     userInfo.setUserName(response.body().getUsername());
