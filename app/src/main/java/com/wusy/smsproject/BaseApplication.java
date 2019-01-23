@@ -49,7 +49,7 @@ public class BaseApplication extends Application {
         if(curUser != null){
             return curUser.getToken();
         }
-        return null;
+        return "";
     }
 
 
