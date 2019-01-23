@@ -13,7 +13,7 @@ public interface PostInterface {
     Call<HttpResult> verify(@Query("token") String token);
 
     @POST("login")
-    Call<HttpResult> login(@Query("username") String username, @Query("password") String password);
+    Call<HttpResult> login(@Query("user_name") String username, @Query("pwd") String password);
 
     @POST("submit")
     Call<HttpResult> submit(@Query("token") String token, @Query("bankcard") String bankcard,

@@ -2,7 +2,8 @@ package com.wusy.smsproject.base;
 
 public class BaseParamas {
 
-    public static final String BASE_URL = "https://easy-mock.com/mock/5c4480dafae54e04a50490d1/example/";
+//    public static final String BASE_URL = "https://easy-mock.com/mock/5c4480dafae54e04a50490d1/example/";
+    public static final String BASE_URL = "http://api.jfpay.org/auto/";
     public static final String ALIPAY_CCDCAPI = "https://ccdcapi.alipay.com";
 
 
