@@ -5,26 +5,47 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="10dp"
         android:layout_margin="10dp"
         android:background="@drawable/normal_shape">
+
         <TextView
             android:id="@+id/bankcard_name"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@android:color/black"
             android:textSize="18sp"/>
 
         <TextView
+            android:id="@+id/bankcard_change"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:background="@color/green"
+            android:layout_alignParentRight="true"
+            android:text="锁定"
+            android:gravity="center"
+            android:textSize="18sp"/>
+        <TextView
+            android:id="@+id/bankcard_edit"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:background="@color/blue"
+            android:text="编辑"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:layout_toLeftOf="@id/bankcard_change"/>
+
+        <TextView
             android:id="@+id/bankcard_cardno"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/black"/>
-
-    </LinearLayout>
+            android:textColor="@android:color/black"
+            android:layout_below="@id/bankcard_name"
+            android:layout_toLeftOf="@id/bankcard_edit"
+            android:layout_marginRight="10dp"/>
+    </RelativeLayout>
 
 </LinearLayout>

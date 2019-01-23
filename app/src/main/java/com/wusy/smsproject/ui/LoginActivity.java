@@ -136,9 +136,7 @@ public class LoginActivity extends AppCompatActivity {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
-                Toast.makeText(LoginActivity.this, "请求失败2=" + throwable.getMessage() , Toast.LENGTH_SHORT).show();
-                System.out.println("请求失败");
-                System.out.println(throwable.getMessage());
+                Toast.makeText(LoginActivity.this, "请求失败 : " + throwable.getMessage() , Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -170,8 +168,7 @@ public class LoginActivity extends AppCompatActivity {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
-                System.out.println("请求失败");
-                System.out.println(throwable.getMessage());
+                Toast.makeText(LoginActivity.this, "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

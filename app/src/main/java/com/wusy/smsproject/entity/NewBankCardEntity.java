@@ -31,6 +31,9 @@ public class NewBankCardEntity {
     private String code;
     private String note;
 
+    // 本地变量，是否被锁定监听
+    private boolean isLocked = false;
+
     public String getId() {
         return id;
     }
@@ -141,5 +144,13 @@ public class NewBankCardEntity {
 
     public void setNote(String note) {
         this.note = note;
+    }
+
+    public boolean isLocked() {
+        return isLocked;
+    }
+
+    public void setLocked(boolean locked) {
+        isLocked = locked;
     }
 }

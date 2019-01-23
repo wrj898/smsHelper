@@ -30,6 +30,7 @@ import com.wusy.smsproject.entity.BankCardEntity;
 import com.wusy.smsproject.entity.HttpResult;
 import com.wusy.smsproject.entity.LogEntity;
 import com.wusy.smsproject.entity.LogTaskEntity;
+import com.wusy.smsproject.entity.NewBankCardEntity;
 import com.wusy.smsproject.entity.UserInfo;
 import com.wusy.smsproject.httpinterfaces.CallBackInterface;
 import com.wusy.smsproject.httpinterfaces.PostInterface;
@@ -61,6 +62,9 @@ public class MainActivity extends FragmentActivity {
 
     private SmsReceiver mReceiver;
     private UploadReceiver mUploadReceiver;
+
+
+    public static List<NewBankCardEntity> bankcardList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -221,7 +225,7 @@ public class MainActivity extends FragmentActivity {
         public void onReceive(final Context context, Intent intent) {
             if (SMS_RECEIVED.equals(intent.getAction())) {
                 // 获取当前用户所有银行卡列表
-                HashMap<String, BankCardEntity> bankCardMap = DatabaseUtils.getBankCardHashMap(context, BaseApplication.getCurUserName());
+                HashMap<String, BankCardEntity> bankCardMap = getBankCardHashMap();
                 if(bankCardMap.size() == 0){
                     return;
                 }
@@ -478,9 +482,28 @@ public class MainActivity extends FragmentActivity {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
-                System.out.println("请求失败");
-                System.out.println(throwable.getMessage());
+                Toast.makeText(MainActivity.this, "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+
+    private HashMap<String, BankCardEntity> getBankCardHashMap(){
+        HashMap<String, BankCardEntity> bankCardMap = new HashMap<>();
+        if(bankcardList != null && bankcardList.size() > 0){
+            for(int i = 0;i < bankcardList.size();i++){
+                // 被锁定状态下才能进行统计
+                if(bankcardList.get(i).isLocked()){
+                    BankCardEntity bankCardEntity = new BankCardEntity();
+                    // note是指银行姓名，从银行名称转换成对应的电话号码，用于筛选短信
+                    bankCardEntity.setBankCode(BankUtils.getTelFromBankName(bankcardList.get(i).getNote()));
+                    bankCardEntity.setBankName(bankcardList.get(i).getNote());
+                    bankCardEntity.setCardNumber(bankcardList.get(i).getApp_id());
+                    bankCardEntity.setUserKey(BaseApplication.getCurUserName());
+                    bankCardMap.put(bankCardEntity.getBankCode(), bankCardEntity);
+                }
+            }
+        }
+        return bankCardMap;
     }
 }
