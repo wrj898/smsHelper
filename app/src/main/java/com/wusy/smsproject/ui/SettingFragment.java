@@ -2,6 +2,7 @@ package com.wusy.smsproject.ui;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -252,8 +253,11 @@ public class SettingFragment extends Fragment {
 
         String token = SPUtils.getStringParam(getContext(), SPUtils.KEY_TOKEN);
         String userId = BaseApplication.getCurUserName();
-
-        Call<HttpResult> call = request.addBankCard(token, name, userId, bankCode,bankName, cardNo);
+        if(TextUtils.isEmpty(userId)){
+            Toast.makeText(getContext(), "userId 出现异常。请重新登录", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Call<HttpResult> call = request.addBankCard(token, name, Integer.valueOf(userId), bankCode,bankName, cardNo);
         call.enqueue(new Callback<HttpResult>() {
 
             @Override
@@ -397,11 +401,20 @@ public class SettingFragment extends Fragment {
                     }else{
                         MainActivity.bankcardList.clear();
                     }
-                    MainActivity.bankcardList.addAll(response.body().getCardlist());
+                    MainActivity.bankcardList.addAll(response.body().getCardList());
                     bankCardAdapter.notifyDataSetChanged();
                 }else{
                     // 失败处理
                     Toast.makeText(getContext(), "获取银行卡列表 : getCode = " + response.body().getCode(), Toast.LENGTH_SHORT).show();
+                    if(response.body().getCode() == BaseParamas.REQUEST_TOKEN_INVALID){
+                        // 如果是token失效 返回到登录页面
+                        if(getContext() != null && getActivity() != null){
+                            Intent intent = new Intent(getContext(), LoginActivity.class);
+                            intent.putExtra("isLogout", true);
+                            getContext().startActivity(intent);
+                            getActivity().finish();
+                        }
+                    }
                 }
             }
 

@@ -12,6 +12,8 @@ public class BaseParamas {
     public static final int REQUEST_OTHER = 2;
     public static final int REQUEST_TOKEN_USELESS = 3;
 
+    public static final int REQUEST_TOKEN_INVALID = 2;
+
     // 日志已上传
     public static final int STATE_UPLOAD = 1;
     // 日志未上传

@@ -23,7 +23,7 @@ public class MineFragment extends Fragment{
         TextView userRate = view.findViewById(R.id.mine_rate);
         TextView userMoney = view.findViewById(R.id.mine_money);
         TextView logOut = view.findViewById(R.id.mine_logout);
-        userName.setText(BaseApplication.getCurUserName());
+        userName.setText(BaseApplication.getCurRealUserName());
         userMoney.setText(BaseApplication.getCurUserMoney());
         userRate.setText(BaseApplication.getCurUserRate());
         logOut.setOnClickListener(new View.OnClickListener() {

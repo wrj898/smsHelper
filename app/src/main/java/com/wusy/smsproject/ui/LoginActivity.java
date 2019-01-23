@@ -124,10 +124,11 @@ public class LoginActivity extends AppCompatActivity {
                     SPUtils.saveBooleanParam(LoginActivity.this, SPUtils.KEY_ISREMBER, isRember);
 
                     UserInfo userInfo = new UserInfo();
-                    userInfo.setUserName(response.body().getUsername());
+                    userInfo.setUserName(response.body().getUser_name());
                     userInfo.setToken(response.body().getToken());
                     userInfo.setMoney(response.body().getBalance());
                     userInfo.setRate(response.body().getFees());
+                    userInfo.setId(response.body().getUser_id());
                     toMainActivity(userInfo);
                 }else{
                     Toast.makeText(LoginActivity.this, "登录账户，请求失败 : " + response.body().getCode(), Toast.LENGTH_SHORT).show();
@@ -163,10 +164,11 @@ public class LoginActivity extends AppCompatActivity {
                 if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_TOKEN, response.body().getToken());
                     UserInfo userInfo = new UserInfo();
-                    userInfo.setUserName(response.body().getUsername());
+                    userInfo.setUserName(response.body().getUser_name());
                     userInfo.setToken(response.body().getToken());
                     userInfo.setMoney(response.body().getBalance());
                     userInfo.setRate(response.body().getFees());
+                    userInfo.setId(response.body().getUser_id());
                     toMainActivity(userInfo);
                 }else{
                     Toast.makeText(LoginActivity.this, "验证token 请求失败 : " + response.body().getCode(), Toast.LENGTH_SHORT).show();

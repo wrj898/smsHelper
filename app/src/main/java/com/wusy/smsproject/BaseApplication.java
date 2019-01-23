@@ -16,10 +16,17 @@ public class BaseApplication extends Application {
         curApplcation = this;
     }
 
+    public static String getCurRealUserName(){
+        if(curUser != null){
+            return curUser.getUserName();
+        }
+        return null;
+    }
 
     public static String getCurUserName(){
         if(curUser != null){
-            return curUser.getUserName();
+            // 原先用的是username做主键，现在修改成用id做主键
+            return String.valueOf(curUser.getId());
         }
         return null;
     }
