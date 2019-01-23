@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 
 import com.wusy.smsproject.entity.BankCardEntity;
 import com.wusy.smsproject.entity.LogEntity;
@@ -49,7 +50,13 @@ public class DatabaseUtils {
     }
 
     public static List<LogEntity> getLogList(Context context, String userKey){
+        List<LogEntity> resultList = new ArrayList<>();
+        // 一般不会传空进来，个别异常情况处理，防止崩溃
+        if(TextUtils.isEmpty(userKey)){
+            return resultList;
+        }
         SQLiteDatabase database = getSQLiteDatabase(context);
+
 
         Cursor cursor = database.query(MySqliteHelper.TABLE_LOG, new String[]{"bankcode","bankname","money","time","cardnumber","userkey","state"},
                 "userkey=?", new String[]{userKey}, null, null, "time DESC");
@@ -62,7 +69,7 @@ public class DatabaseUtils {
         int userkeyIndex = cursor.getColumnIndex("userkey");
         int stateIndex = cursor.getColumnIndex("state");
 
-        List<LogEntity> resultList = new ArrayList<>();
+
 
         while(cursor.moveToNext()){
             LogEntity logEntity = new LogEntity();

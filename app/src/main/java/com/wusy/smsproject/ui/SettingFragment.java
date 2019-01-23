@@ -1,6 +1,7 @@
 package com.wusy.smsproject.ui;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -8,7 +9,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
-import android.text.method.DigitsKeyListener;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +22,6 @@ import com.wusy.smsproject.BaseApplication;
 import com.wusy.smsproject.R;
 import com.wusy.smsproject.adapter.BankCardAdapter;
 import com.wusy.smsproject.base.BaseParamas;
-import com.wusy.smsproject.entity.BankCardEntity;
 import com.wusy.smsproject.entity.CardInfo;
 import com.wusy.smsproject.entity.HttpResult;
 import com.wusy.smsproject.entity.HttpResultOfBankList;
@@ -43,6 +42,7 @@ public class SettingFragment extends Fragment {
 
     private ListView bankcardList;
     private BankCardAdapter bankCardAdapter;
+    private ProgressDialog loadingDialog;
 
     @Nullable
     @Override
@@ -146,8 +146,8 @@ public class SettingFragment extends Fragment {
         final View view = factory.inflate(R.layout.dialog_bankcard, null);
         final EditText etName = view.findViewById(R.id.et_bankcard_name);
         final EditText etCardNo = view.findViewById(R.id.et_bankcard_cardno);
-        etName.setText("测试号");
-        etCardNo.setText("6217001930028895283");
+//        etName.setText("测试号");
+//        etCardNo.setText("6217001930028895283");
         if(isEdit && bankCardEntity != null){
             etName.setText(bankCardEntity.getName());
             etCardNo.setText(bankCardEntity.getApp_id());
@@ -197,6 +197,7 @@ public class SettingFragment extends Fragment {
      * 验证银行卡号，通过的话上传到服务端
      */
     public void validateBankcard(final String cardNo, final String name, final NewBankCardEntity bankCardEntity){
+        showLoadingDialog();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BaseParamas.ALIPAY_CCDCAPI) // 设置 网络请求 Url
                 .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
@@ -209,6 +210,7 @@ public class SettingFragment extends Fragment {
             @Override
             public void onResponse(Call<CardInfo> call, Response<CardInfo> response) {
                 if(response.body() == null){
+                    hideLoadingDailog();
                     Toast.makeText(getContext(), "验证银行卡号 网络请求错误", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -220,6 +222,7 @@ public class SettingFragment extends Fragment {
                         editBankCard(bankCardEntity.getId(), name, response.body().getBank(), BankUtils.getNameOfBank(response.body().getBank()), cardNo);
                     }
                 }else{
+                    hideLoadingDailog();
                     if(!response.body().isValidated()){
                         Toast.makeText(getContext(), "请输入正确的银行卡号", Toast.LENGTH_SHORT).show();
                         return;
@@ -231,6 +234,7 @@ public class SettingFragment extends Fragment {
             //请求失败时回调
             @Override
             public void onFailure(Call<CardInfo> call, Throwable throwable) {
+                hideLoadingDailog();
                 Toast.makeText(getContext(), "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -244,7 +248,7 @@ public class SettingFragment extends Fragment {
      * @param cardNo 卡号
      */
     public void addBankCard(String name, String bankCode, String bankName, String cardNo){
-
+        showLoadingDialog();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BaseParamas.BASE_URL) // 设置 网络请求 Url
                 .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
@@ -261,6 +265,7 @@ public class SettingFragment extends Fragment {
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
                 if(response.body() == null){
+                    hideLoadingDailog();
                     Toast.makeText(getContext(), "上传银行卡信息 网络请求错误", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -276,6 +281,7 @@ public class SettingFragment extends Fragment {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
+                hideLoadingDailog();
                 Toast.makeText(getContext(), "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -287,6 +293,7 @@ public class SettingFragment extends Fragment {
      * @param bankcardId 银行卡id编号
      */
     public void removeBankCard(String bankcardId){
+        showLoadingDialog();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BaseParamas.BASE_URL) // 设置 网络请求 Url
                 .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
@@ -302,6 +309,7 @@ public class SettingFragment extends Fragment {
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
                 if(response.body() == null){
+                    hideLoadingDailog();
                     Toast.makeText(getContext(), "删除银行卡 网络请求错误", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -310,6 +318,7 @@ public class SettingFragment extends Fragment {
                     getBankCardList();
                 }else{
                     // 失败处理
+                    hideLoadingDailog();
                     Toast.makeText(getContext(), "删除银行卡失败 : getCode = " + response.body().getCode(), Toast.LENGTH_SHORT).show();
                 }
             }
@@ -317,6 +326,7 @@ public class SettingFragment extends Fragment {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
+                hideLoadingDailog();
                 Toast.makeText(getContext(), "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -332,7 +342,7 @@ public class SettingFragment extends Fragment {
      * @param cardNo 卡号
      */
     public void editBankCard(String id, String name, String bankCode, String bankName, String cardNo){
-
+        showLoadingDialog();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BaseParamas.BASE_URL) // 设置 网络请求 Url
                 .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
@@ -348,6 +358,7 @@ public class SettingFragment extends Fragment {
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
                 if(response.body() == null){
+                    hideLoadingDailog();
                     Toast.makeText(getContext(), "编辑银行卡 网络请求错误", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -356,6 +367,7 @@ public class SettingFragment extends Fragment {
                     getBankCardList();
                 }else{
                     // 失败处理
+                    hideLoadingDailog();
                     Toast.makeText(getContext(), "添加银行卡失败 : getCode = " + response.body().getCode(), Toast.LENGTH_SHORT).show();
                 }
             }
@@ -363,6 +375,7 @@ public class SettingFragment extends Fragment {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
+                hideLoadingDailog();
                 Toast.makeText(getContext(), "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -373,6 +386,7 @@ public class SettingFragment extends Fragment {
      * 获取银行卡列表
      */
     public void getBankCardList(){
+        showLoadingDialog();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BaseParamas.BASE_URL) // 设置 网络请求 Url
                 .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
@@ -387,6 +401,7 @@ public class SettingFragment extends Fragment {
 
             @Override
             public void onResponse(Call<HttpResultOfBankList> call, Response<HttpResultOfBankList> response) {
+                hideLoadingDailog();
                 if(response.body() == null){
                     Toast.makeText(getContext(), "获取银行卡列表 : 网络请求错误 ", Toast.LENGTH_SHORT).show();
                     return;
@@ -420,6 +435,7 @@ public class SettingFragment extends Fragment {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResultOfBankList> call, Throwable throwable) {
+                hideLoadingDailog();
                 Toast.makeText(getContext(), "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -438,5 +454,24 @@ public class SettingFragment extends Fragment {
             }
         }
         return false;
+    }
+
+    public void showLoadingDialog() {
+        if(getActivity() == null || loadingDialog == null){
+            loadingDialog = new ProgressDialog(getActivity());
+//        mDefaultDialog.setProgressStyle(android.app.ProgressDialog.STYLE_SPINNER); //默认就是小圆圈的那种形式
+            loadingDialog.setMessage("正在请求...");
+//        mDefaultDialog.setCancelable(true);//默认true
+            loadingDialog.setCanceledOnTouchOutside(false);//默认true
+        }
+        if(!loadingDialog.isShowing()){
+            loadingDialog.show();
+        }
+    }
+
+    public void hideLoadingDailog(){
+        if(loadingDialog != null && loadingDialog.isShowing()){
+            loadingDialog.dismiss();
+        }
     }
 }
