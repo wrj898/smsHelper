@@ -47,7 +47,7 @@ public class LogTaskEntity {
                 }else{
                     callback(logEntity, BaseParamas.REQUEST_OTHER);
                 }
-                
+
             }
 
             //请求失败时回调

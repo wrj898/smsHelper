@@ -63,7 +63,6 @@ public class LoginActivity extends AppCompatActivity {
             etUserName.setText(SPUtils.getStringParam(LoginActivity.this, SPUtils.KEY_USER_NAME));
             etPassword.setText(SPUtils.getStringParam(LoginActivity.this, SPUtils.KEY_USER_PWD));
         }
-        Log.e("wusy111", "initViews = " + isRember);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,10 +110,13 @@ public class LoginActivity extends AppCompatActivity {
             //请求成功时回调
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
-                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() == null){
+                    Toast.makeText(LoginActivity.this, "登录账户 网络请求错误", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_TOKEN, response.body().getToken());
                     boolean isRember = cbRember.isChecked();
-                    Log.e("wusy111", "onResponse = " + isRember);
                     if(isRember){
                         SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_USER_NAME, etUserName.getText().toString());
                         SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_USER_PWD, etPassword.getText().toString());
@@ -128,7 +130,7 @@ public class LoginActivity extends AppCompatActivity {
                     userInfo.setRate(response.body().getFees());
                     toMainActivity(userInfo);
                 }else{
-                    Toast.makeText(LoginActivity.this, "请求失败1", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "登录账户，请求失败 : " + response.body().getCode(), Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -154,7 +156,11 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
-                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                if(response.body() == null){
+                    Toast.makeText(LoginActivity.this, "验证token 网络请求错误", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if(response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     SPUtils.saveParam(LoginActivity.this, SPUtils.KEY_TOKEN, response.body().getToken());
                     UserInfo userInfo = new UserInfo();
                     userInfo.setUserName(response.body().getUsername());
@@ -162,13 +168,15 @@ public class LoginActivity extends AppCompatActivity {
                     userInfo.setMoney(response.body().getBalance());
                     userInfo.setRate(response.body().getFees());
                     toMainActivity(userInfo);
+                }else{
+                    Toast.makeText(LoginActivity.this, "验证token 请求失败 : " + response.body().getCode(), Toast.LENGTH_SHORT).show();
                 }
             }
 
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
-                Toast.makeText(LoginActivity.this, "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, "验证token 请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
