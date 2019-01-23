@@ -6,6 +6,7 @@ public class UserInfo {
     private String token;
     private String money;
     private String rate;
+    private int id;
 
     public String getUserName() {
         return userName;
@@ -37,5 +38,13 @@ public class UserInfo {
 
     public void setRate(String rate) {
         this.rate = rate;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

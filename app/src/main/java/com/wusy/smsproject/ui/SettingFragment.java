@@ -252,8 +252,11 @@ public class SettingFragment extends Fragment {
 
         String token = SPUtils.getStringParam(getContext(), SPUtils.KEY_TOKEN);
         String userId = BaseApplication.getCurUserName();
-
-        Call<HttpResult> call = request.addBankCard(token, name, userId, bankCode,bankName, cardNo);
+        if(TextUtils.isEmpty(userId)){
+            Toast.makeText(getContext(), "userId 出现异常。请重新登录", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Call<HttpResult> call = request.addBankCard(token, name, Integer.valueOf(userId), bankCode,bankName, cardNo);
         call.enqueue(new Callback<HttpResult>() {
 
             @Override

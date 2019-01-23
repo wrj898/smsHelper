@@ -32,7 +32,7 @@ public interface PostInterface {
 //      {code:1} 1.成功2.其他 注：成功后请求/list接口重新获取列表
     @POST("add")
     Call<HttpResult> addBankCard(@Query("token") String token, @Query("name") String name,
-                                 @Query("user_id") String user_id, @Query("code") String code,
+                                 @Query("user_id") int user_id, @Query("code") String code,
                                  @Query("note") String note, @Query("app_id") String app_id);
 
 
