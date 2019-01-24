@@ -4,11 +4,15 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,16 +26,21 @@ import com.wusy.smsproject.BaseApplication;
 import com.wusy.smsproject.R;
 import com.wusy.smsproject.adapter.BankCardAdapter;
 import com.wusy.smsproject.base.BaseParamas;
+import com.wusy.smsproject.entity.BankCardEntity;
 import com.wusy.smsproject.entity.CardInfo;
 import com.wusy.smsproject.entity.HttpResult;
 import com.wusy.smsproject.entity.HttpResultOfBankList;
+import com.wusy.smsproject.entity.LogEntity;
 import com.wusy.smsproject.entity.NewBankCardEntity;
 import com.wusy.smsproject.httpinterfaces.BankGetInterface;
 import com.wusy.smsproject.httpinterfaces.PostInterface;
 import com.wusy.smsproject.utils.BankUtils;
 import com.wusy.smsproject.utils.SPUtils;
+import com.wusy.smsproject.utils.db.DatabaseUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -43,7 +52,7 @@ public class SettingFragment extends Fragment {
     private ListView bankcardList;
     private BankCardAdapter bankCardAdapter;
     private ProgressDialog loadingDialog;
-
+    private boolean isFirst = true;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -435,6 +444,10 @@ public class SettingFragment extends Fragment {
                             MainActivity.bankcardList.get(i).setLocked(true);
                         }
                     }
+                    if(isFirst){
+                        isFirst = false;
+                        getRecentSms();
+                    }
                     bankCardAdapter.notifyDataSetChanged();
                 }else{
                     // 失败处理
@@ -493,4 +506,92 @@ public class SettingFragment extends Fragment {
             loadingDialog.dismiss();
         }
     }
+
+    /**
+     * 获取近期短信
+     * 思路: 每次app关闭或异常退出，会保留一个关闭退出时间(异常退出不一定会保存)
+     *       当下次进入app，第一次到达银行页面 获取到银行卡列表的时候，会根据银行卡列表锁定信息，
+     *       以及上次退出时间(如果上次退出时间太长，会只统计一天内的短信信息)来读取短信列表，
+     *       短信列表信息筛选过后，发送广播，提示
+     */
+    public void getRecentSms() {
+        // 所有短信
+        String SMS_URI_ALL = "content://sms/";
+        try {
+            if(getContext() == null){
+                return;
+            }
+            Uri uri = Uri.parse(SMS_URI_ALL);
+            String[] projection = new String[] { "_id", "address", "person","body", "date", "type"};
+            // 上次退出的时间
+            long lastDestoryTime = SPUtils.getLongParam(BaseApplication.getCurApplicationContext(), SPUtils.KEY_DESTORY_TIME);
+            // 一天的毫秒数
+            long dayMills = 24 * 60 * 60 * 1000;
+            if(System.currentTimeMillis() - lastDestoryTime > dayMills){
+                // 如果上次退出 超过一天的时间，就只读取一天内的短信
+                lastDestoryTime = System.currentTimeMillis() - dayMills;
+            }
+            // 筛选条件
+            String condition = " date >  " + String.valueOf(lastDestoryTime);
+            Cursor cur = getContext().getContentResolver().query(uri, projection, condition,null, "date desc");
+
+            // 获取当前用户所有银行卡列表
+            HashMap<String, BankCardEntity> bankCardMap = MainActivity.getBankCardHashMap();
+            if(bankCardMap.size() == 0){
+                return;
+            }
+
+            if (cur != null && cur.moveToFirst()) {
+                // 发信人
+                int index_Address = cur.getColumnIndex("address");
+                // 短信内容
+                int index_Body = cur.getColumnIndex("body");
+                // 短信时间
+                int index_Date = cur.getColumnIndex("date");
+                // 短信类型 0:所以短信  1:"接收" 2:"发送"  3:"草稿"  4:"发件箱"  5:"发送失败" 6:"待发送列表"
+                int index_Type = cur.getColumnIndex("type");
+
+                do {
+                    String strAddress = cur.getString(index_Address);
+                    String strbody = cur.getString(index_Body);
+                    long longDate = cur.getLong(index_Date);
+                    int intType = cur.getInt(index_Type);
+
+                    BankCardEntity curBankCard = null;
+                    if(!bankCardMap.containsKey(strAddress)){
+                        continue;
+                    }
+                    // 根据时间来作为查询条件，看是否数据库已经包含该短信信息
+                    if(DatabaseUtils.isContainLog(getContext(), String.valueOf(longDate))){
+                        continue;
+                    }
+                    
+                    curBankCard = bankCardMap.get(strAddress);
+
+                    LogEntity logEntity = new LogEntity();
+                    logEntity.setBankName(curBankCard.getBankName());
+                    logEntity.setCardNumber(curBankCard.getCardNumber());
+                    logEntity.setUserKey(BaseApplication.getCurUserName());
+                    logEntity.setTime(String.valueOf(longDate));
+                    logEntity.setMoney(BankUtils.getMoneyFromSMS(strAddress,strbody));
+                    logEntity.setState(BaseParamas.STATE_WITHOUT_UPLOAD);
+                    DatabaseUtils.insertLog(getContext(), logEntity);
+                } while (cur.moveToNext());
+
+                Intent intent = new Intent();
+                intent.setAction("wusy.uploadtask.ALARM_WAKE_ACTION");
+                getContext().sendBroadcast(intent);
+
+                if (!cur.isClosed()) {
+                    cur.close();
+                }
+            } else {
+                Log.e("LogFragment", "没有短信");
+            }
+            Log.d("LogFragment", "读取短信结束");
+        } catch (SQLiteException ex) {
+            Log.d("SQLiteException", ex.getMessage());
+        }
+    }
+
 }

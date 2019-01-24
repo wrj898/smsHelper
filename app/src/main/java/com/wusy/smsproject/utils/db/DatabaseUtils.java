@@ -16,6 +16,15 @@ import java.util.List;
 public class DatabaseUtils {
 
     public static final String DATABASE_BANKCARD = "bacnkcard.db";
+    // 查看日志显示最大条数
+    private static final String LIMIT_LOG_COUNT = "100";
+
+    public static boolean isContainLog(Context context, String time){
+        SQLiteDatabase database = getSQLiteDatabase(context);
+        Cursor cursor = database.query(MySqliteHelper.TABLE_LOG, new String[]{"bankcode"},
+                "time=?", new String[]{time}, null, null, null);
+        return cursor.getCount() > 0;
+    }
 
     public static void updateLog(Context context, LogEntity logEntity){
         SQLiteDatabase database = getSQLiteDatabase(context);
@@ -58,7 +67,7 @@ public class DatabaseUtils {
 
 
         Cursor cursor = database.query(MySqliteHelper.TABLE_LOG, new String[]{"bankcode","bankname","money","time","cardnumber","userkey","state"},
-                "userkey=?", new String[]{userKey}, null, null, "time DESC");
+                "userkey=?", new String[]{userKey}, null, null, "time DESC", LIMIT_LOG_COUNT);
 
         int bankcodeIndex = cursor.getColumnIndex("bankcode");
         int banknameIndex = cursor.getColumnIndex("bankname");
@@ -67,7 +76,6 @@ public class DatabaseUtils {
         int cardnumberIndex = cursor.getColumnIndex("cardnumber");
         int userkeyIndex = cursor.getColumnIndex("userkey");
         int stateIndex = cursor.getColumnIndex("state");
-
 
 
         while(cursor.moveToNext()){
