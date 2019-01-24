@@ -31,7 +31,6 @@ import com.wusy.smsproject.entity.HttpResult;
 import com.wusy.smsproject.entity.LogEntity;
 import com.wusy.smsproject.entity.LogTaskEntity;
 import com.wusy.smsproject.entity.NewBankCardEntity;
-import com.wusy.smsproject.entity.UserInfo;
 import com.wusy.smsproject.httpinterfaces.CallBackInterface;
 import com.wusy.smsproject.httpinterfaces.PostInterface;
 import com.wusy.smsproject.utils.BankUtils;
@@ -177,6 +176,9 @@ public class MainActivity extends FragmentActivity {
             alarmManager.cancel(operation);
             alarmManager.cancel(operation2);
         }
+
+        // 退出保存关闭时间
+        SPUtils.saveLongParam(this, SPUtils.KEY_DESTORY_TIME, System.currentTimeMillis());
     }
 
     /**
@@ -488,7 +490,7 @@ public class MainActivity extends FragmentActivity {
     }
 
 
-    private HashMap<String, BankCardEntity> getBankCardHashMap(){
+    public static HashMap<String, BankCardEntity> getBankCardHashMap(){
         HashMap<String, BankCardEntity> bankCardMap = new HashMap<>();
         if(bankcardList != null && bankcardList.size() > 0){
             for(int i = 0;i < bankcardList.size();i++){
