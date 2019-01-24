@@ -84,6 +84,16 @@ public class SettingFragment extends Fragment {
                     }
                     // 切换状态并刷新页面
                     cardEntity.setLocked(!cardEntity.isLocked());
+                    StringBuilder lockedBank = new StringBuilder();
+                    for(int i =0;i < MainActivity.bankcardList.size(); i++){
+                        if(MainActivity.bankcardList.get(i).isLocked()){
+                            lockedBank.append(MainActivity.bankcardList.get(i).getApp_id());
+                            lockedBank.append(",");
+                        }
+                    }
+                    // 存储key为用户名称+用户id
+                    String key = BaseApplication.getCurRealUserName() + BaseApplication.getCurUserName();
+                    SPUtils.saveParam(BaseApplication.getCurApplicationContext(),key, lockedBank.toString());
                     bankCardAdapter.notifyDataSetChanged();
 
                 }
@@ -416,6 +426,15 @@ public class SettingFragment extends Fragment {
                     }
                     Toast.makeText(getContext(), "刷新银行卡列表成功" + response.body().getCode(), Toast.LENGTH_SHORT).show();
                     MainActivity.bankcardList.addAll(response.body().getCardList());
+
+                    String key = BaseApplication.getCurRealUserName() + BaseApplication.getCurUserName();
+                    String lockBank = SPUtils.getStringParam(BaseApplication.getCurApplicationContext(), key);
+                    for(int i = 0; i < MainActivity.bankcardList.size();i++){
+                        // 如果保存信息里面 包含该银行，则状态换为锁定
+                        if(lockBank.contains(MainActivity.bankcardList.get(i).getApp_id())){
+                            MainActivity.bankcardList.get(i).setLocked(true);
+                        }
+                    }
                     bankCardAdapter.notifyDataSetChanged();
                 }else{
                     // 失败处理
