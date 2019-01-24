@@ -3,11 +3,15 @@ package com.wusy.smsproject.ui;
 import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -28,6 +32,7 @@ import com.wusy.smsproject.R;
 import com.wusy.smsproject.base.BaseParamas;
 import com.wusy.smsproject.entity.BankCardEntity;
 import com.wusy.smsproject.entity.HttpResult;
+import com.wusy.smsproject.entity.HttpResultOfBankList;
 import com.wusy.smsproject.entity.LogEntity;
 import com.wusy.smsproject.entity.LogTaskEntity;
 import com.wusy.smsproject.entity.NewBankCardEntity;
@@ -62,6 +67,7 @@ public class MainActivity extends FragmentActivity {
     private SmsReceiver mReceiver;
     private UploadReceiver mUploadReceiver;
 
+    private ProgressDialog loadingDialog;
 
     public static List<NewBankCardEntity> bankcardList = new ArrayList<>();
 
@@ -144,9 +150,10 @@ public class MainActivity extends FragmentActivity {
         iFilter2.setPriority(Integer.MAX_VALUE);
         registerReceiver(mUploadReceiver, iFilter2);
 
-
+        getRecentSms();
         startRepeatingTask();
         startRepeatingVerify();
+
     }
 
 
@@ -189,10 +196,12 @@ public class MainActivity extends FragmentActivity {
             if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_SMS}, REQUEST_SMS_CODE);
             } else {
-                initFragments();
+//                initFragments();
+                getBankCardList();
             }
         } else {
-            initFragments();
+//            initFragments();
+            getBankCardList();
         }
     }
 
@@ -202,7 +211,8 @@ public class MainActivity extends FragmentActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_SMS_CODE) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                initFragments();
+//                initFragments();
+                getBankCardList();
             } else {
                 // 如果用户拒绝权限，直接关闭应用
                 // TODO 或者有其他需求可再此处更改
@@ -354,7 +364,7 @@ public class MainActivity extends FragmentActivity {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         if(alarmManager != null){
             alarmManager.cancel(operation);
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 10 * 60 * 1000, operation);
+            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 10 * 60 *  1000, operation);
         }
     }
 
@@ -392,8 +402,10 @@ public class MainActivity extends FragmentActivity {
 
     private void startUploadTask(){
         cancelAllTask();
+        Log.e("wusy", " main startUploadTask");
         List<LogEntity> logEntityList = DatabaseUtils.getLogListWithState(this, BaseApplication.getCurUserName(),
                 String.valueOf(BaseParamas.STATE_UPLOAD_FAILED));
+
         if(logEntityList == null || logEntityList.size() == 0){
             return;
         }
@@ -402,11 +414,9 @@ public class MainActivity extends FragmentActivity {
             logTaskEntity.setCallback(new CallBackInterface() {
                 @Override
                 public void uploadTaskCallback(LogEntity logEntity, int resultCode) {
-                    Log.e("wusy","resultCode = " + resultCode);
                     if(resultCode == BaseParamas.REQUEST_SUCCESS){
                         logEntity.setState(BaseParamas.STATE_UPLOAD);
                         DatabaseUtils.updateLog(BaseApplication.getCurApplicationContext(), logEntity);
-
                     }else if(resultCode == BaseParamas.REQUEST_TOKEN_USELESS){
                         logEntity.setState(BaseParamas.STATE_UPLOAD_FAILED);
                         DatabaseUtils.updateLog(BaseApplication.getCurApplicationContext(), logEntity);
@@ -507,5 +517,180 @@ public class MainActivity extends FragmentActivity {
             }
         }
         return bankCardMap;
+    }
+
+
+    /**
+     * 获取银行卡列表
+     */
+    public void getBankCardList(){
+        showLoadingDialog();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(BaseParamas.BASE_URL) // 设置 网络请求 Url
+                .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
+                .build();
+
+        PostInterface request = retrofit.create(PostInterface.class);
+
+        String token = SPUtils.getStringParam(this, SPUtils.KEY_TOKEN);
+
+        Call<HttpResultOfBankList> call = request.getBankList(token);
+        call.enqueue(new Callback<HttpResultOfBankList>() {
+
+            @Override
+            public void onResponse(Call<HttpResultOfBankList> call, Response<HttpResultOfBankList> response) {
+                hideLoadingDailog();
+                if(response.body() == null){
+                    // 失败直接退出
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    intent.putExtra("isLogout", true);
+                    startActivity(intent);
+                    finish();
+                    Toast.makeText(MainActivity.this, "获取银行卡列表 : 网络请求错误 ", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // 成功
+                if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
+                    if(MainActivity.bankcardList == null){
+                        MainActivity.bankcardList = new ArrayList<>();
+                    }else{
+                        MainActivity.bankcardList.clear();
+                    }
+                    Toast.makeText(MainActivity.this, "刷新银行卡列表成功" + response.body().getCode(), Toast.LENGTH_SHORT).show();
+                    MainActivity.bankcardList.addAll(response.body().getCardList());
+
+                    String key = BaseApplication.getCurRealUserName() + BaseApplication.getCurUserName();
+                    String lockBank = SPUtils.getStringParam(BaseApplication.getCurApplicationContext(), key);
+                    for(int i = 0; i < MainActivity.bankcardList.size();i++){
+                        // 如果保存信息里面 包含该银行，则状态换为锁定
+                        if(lockBank.contains(MainActivity.bankcardList.get(i).getApp_id())){
+                            MainActivity.bankcardList.get(i).setLocked(true);
+                        }
+                    }
+                    initFragments();
+                }else{
+                    // 失败处理
+                    Toast.makeText(MainActivity.this, "获取银行卡列表 : getCode = " + response.body().getCode(), Toast.LENGTH_SHORT).show();
+                    // 失败直接退出，如果是token失效 返回到登录页面
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    intent.putExtra("isLogout", true);
+                    startActivity(intent);
+                    finish();
+                }
+            }
+
+            //请求失败时回调
+            @Override
+            public void onFailure(Call<HttpResultOfBankList> call, Throwable throwable) {
+                hideLoadingDailog();
+                Toast.makeText(MainActivity.this, "请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
+                // 失败直接退出
+                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                intent.putExtra("isLogout", true);
+                startActivity(intent);
+                finish();
+            }
+        });
+    }
+
+
+
+    public void showLoadingDialog() {
+        if(loadingDialog == null){
+            loadingDialog = new ProgressDialog(this);
+//        mDefaultDialog.setProgressStyle(android.app.ProgressDialog.STYLE_SPINNER); //默认就是小圆圈的那种形式
+            loadingDialog.setMessage("正在请求...");
+//        mDefaultDialog.setCancelable(true);//默认true
+            loadingDialog.setCanceledOnTouchOutside(false);//默认true
+        }
+        if(!loadingDialog.isShowing()){
+            loadingDialog.show();
+        }
+    }
+
+    public void hideLoadingDailog(){
+        if(loadingDialog != null && loadingDialog.isShowing()){
+            loadingDialog.dismiss();
+        }
+    }
+
+
+
+    public void getRecentSms() {
+        // 所有短信
+        String SMS_URI_ALL = "content://sms/";
+        try {
+            Uri uri = Uri.parse(SMS_URI_ALL);
+            String[] projection = new String[] { "_id", "address", "person","body", "date", "type"};
+            // 上次退出的时间
+            long lastDestoryTime = SPUtils.getLongParam(BaseApplication.getCurApplicationContext(), SPUtils.KEY_DESTORY_TIME);
+            // 一天的毫秒数
+            long dayMills = 24 * 60 * 60 * 1000;
+            if(System.currentTimeMillis() - lastDestoryTime > dayMills){
+                // 如果上次退出 超过一天的时间，就只读取一天内的短信
+                lastDestoryTime = System.currentTimeMillis() - dayMills;
+            }
+            // 筛选条件
+            String condition = " date >  " + String.valueOf(lastDestoryTime);
+            Cursor cur = getContentResolver().query(uri, projection, condition,null, "date desc");
+
+            // 获取当前用户所有银行卡列表
+            HashMap<String, BankCardEntity> bankCardMap = getBankCardHashMap();
+            if(bankCardMap.size() == 0){
+                return;
+            }
+
+            if (cur != null && cur.moveToFirst()) {
+                // 发信人
+                int index_Address = cur.getColumnIndex("address");
+                // 短信内容
+                int index_Body = cur.getColumnIndex("body");
+                // 短信时间
+                int index_Date = cur.getColumnIndex("date");
+                // 短信类型 0:所以短信  1:"接收" 2:"发送"  3:"草稿"  4:"发件箱"  5:"发送失败" 6:"待发送列表"
+                int index_Type = cur.getColumnIndex("type");
+
+                do {
+                    String strAddress = cur.getString(index_Address);
+                    String strbody = cur.getString(index_Body);
+                    long longDate = cur.getLong(index_Date);
+                    int intType = cur.getInt(index_Type);
+
+                    BankCardEntity curBankCard = null;
+                    if(!bankCardMap.containsKey(strAddress)){
+                        continue;
+                    }
+                    // 根据时间来作为查询条件，看是否数据库已经包含该短信信息
+                    if(DatabaseUtils.isContainLog(MainActivity.this, String.valueOf(longDate))){
+                        continue;
+                    }
+
+                    curBankCard = bankCardMap.get(strAddress);
+
+                    LogEntity logEntity = new LogEntity();
+                    logEntity.setBankName(curBankCard.getBankName());
+                    logEntity.setCardNumber(curBankCard.getCardNumber());
+                    logEntity.setUserKey(BaseApplication.getCurUserName());
+                    logEntity.setTime(String.valueOf(longDate));
+                    logEntity.setMoney(BankUtils.getMoneyFromSMS(strAddress,strbody));
+                    logEntity.setState(BaseParamas.STATE_WITHOUT_UPLOAD);
+                    DatabaseUtils.insertLog(MainActivity.this, logEntity);
+                } while (cur.moveToNext());
+
+//                Intent intent = new Intent();
+//                intent.setAction("wusy.uploadtask.ALARM_WAKE_ACTION");
+//                sendBroadcast(intent);
+
+                if (!cur.isClosed()) {
+                    cur.close();
+                }
+            } else {
+                Log.e("LogFragment", "没有短信");
+            }
+            Log.d("LogFragment", "读取短信结束");
+        } catch (SQLiteException ex) {
+            Log.d("SQLiteException", ex.getMessage());
+        }
     }
 }

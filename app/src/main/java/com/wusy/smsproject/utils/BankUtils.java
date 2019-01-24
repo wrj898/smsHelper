@@ -20,7 +20,7 @@ public class BankUtils {
     // 中国工商银行
     public static final String TEL_GONGSHANG = "95588";
     // 中国建设银行
-    public static final String TEL_JIANSHE = "+8613123001313";
+    public static final String TEL_JIANSHE = "95533";
     // 招商银行
     public static final String TEL_ZHAOSHANG = "95555";
     // 中国农业银行

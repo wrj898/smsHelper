@@ -446,7 +446,7 @@ public class SettingFragment extends Fragment {
                     }
                     if(isFirst){
                         isFirst = false;
-                        getRecentSms();
+//                        getRecentSms();
                     }
                     bankCardAdapter.notifyDataSetChanged();
                 }else{
@@ -565,7 +565,7 @@ public class SettingFragment extends Fragment {
                     if(DatabaseUtils.isContainLog(getContext(), String.valueOf(longDate))){
                         continue;
                     }
-                    
+
                     curBankCard = bankCardMap.get(strAddress);
 
                     LogEntity logEntity = new LogEntity();
