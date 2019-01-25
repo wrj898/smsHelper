@@ -235,8 +235,8 @@ public class BankUtils {
 //        // 兴业发展银行
 //        public static final String TEL_XINGYEFAZHAN = "95561";
         if(TEL_JIANSHE.equals(sender)){
-            // 中国建设银行
-
+            // 中国建设银行 的储蓄卡账户1月24日13时23分支付机构提现收入人民币1.00元,活期余额7778.06元。[建设银行]
+            result = getMoneyFromSMSWithReg(message,"分支付机构提现收入人民币[0-9]*[.][0-9]{0,4}元,");
         }else if(TEL_ZHAOSHANG.equals(sender)){
             // 招商银行  您账户5497于01月23日19:41收款人民币1.00，备注：支付宝-支付宝（中国）网络技术有限公，更多详情请查看招商银行APP动账通知。[招商银行]
             result = getMoneyFromSMSWithReg(message,"收款人民币[0-9]*[.][0-9]{0,4},.*支付宝");

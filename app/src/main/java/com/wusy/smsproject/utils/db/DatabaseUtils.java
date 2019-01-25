@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+import com.wusy.smsproject.base.BaseParamas;
 
 import com.wusy.smsproject.entity.BankCardEntity;
 import com.wusy.smsproject.entity.LogEntity;
@@ -100,7 +101,7 @@ public class DatabaseUtils {
         SQLiteDatabase database = getSQLiteDatabase(context);
 
         Cursor cursor = database.query(MySqliteHelper.TABLE_LOG, new String[]{"bankcode","bankname","money","time","cardnumber","userkey","state"},
-                "userkey=? AND state=?", new String[]{userKey, state}, null, null, null);
+                "userkey=? AND ( state=? OR state=? )", new String[]{userKey, state, String.valueOf(BaseParamas.STATE_WITHOUT_UPLOAD)}, null, null, null);
 
         int bankcodeIndex = cursor.getColumnIndex("bankcode");
         int banknameIndex = cursor.getColumnIndex("bankname");

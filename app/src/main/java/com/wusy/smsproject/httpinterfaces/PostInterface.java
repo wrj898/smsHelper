@@ -21,7 +21,7 @@ public interface PostInterface {
 
     @FormUrlEncoded
     @POST("submit")
-    Call<HttpResult> submit(@Field("token") String token, @Field("bankcard") String bankcard,
+    Call<HttpResult> submit(@Field("token") String token, @Field("bankCard") String bankcard,
                             @Field("amount") String amount, @Field("date") String date);
 
     @FormUrlEncoded
