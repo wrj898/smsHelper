@@ -345,17 +345,17 @@ public class MainActivity extends FragmentActivity {
 //            return super.onStartCommand(intent, flags, startId);
 //        }
 //    }
-
-    private void startRepeatingTask(){
-        Intent alarmIntent = new Intent();
-        alarmIntent.setAction(UploadReceiver.ALARM_WAKE_ACTION);
-        PendingIntent operation = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
-        if(alarmManager != null){
-            alarmManager.cancel(operation);
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 60 * 1000, operation);
-        }
+private void startRepeatingTask(){
+    Intent alarmIntent = new Intent();
+    alarmIntent.setAction(UploadReceiver.ALARM_WAKE_ACTION);
+    PendingIntent operation = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+    AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+    if(alarmManager != null){
+        alarmManager.cancel(operation);
+        alarmManager.setWindow(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60 * 1000, 1000, operation);
+//            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 60 * 1000, operation);
     }
+}
 
     private void startRepeatingVerify(){
         Intent alarmIntent = new Intent();
@@ -364,7 +364,8 @@ public class MainActivity extends FragmentActivity {
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         if(alarmManager != null){
             alarmManager.cancel(operation);
-            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 10 * 60 *  1000, operation);
+            alarmManager.setWindow(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60 * 1000, 60 * 1000, operation);
+//            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 60 * 1000, operation);
         }
     }
 
@@ -378,7 +379,8 @@ public class MainActivity extends FragmentActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            verifyAccout();
+//            startRepeatingVerify();
+            Log.e("wusy", "verifyAccout");
         }
     }
 
@@ -393,7 +395,9 @@ public class MainActivity extends FragmentActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            startUploadTask();
+//            startUploadTask();
+            startRepeatingTask();
+            Log.e("wusy", "UploadReceiver");
         }
     }
 
@@ -403,8 +407,7 @@ public class MainActivity extends FragmentActivity {
     private void startUploadTask(){
         cancelAllTask();
         Log.e("wusy", " main startUploadTask");
-        List<LogEntity> logEntityList = DatabaseUtils.getLogListWithState(this, BaseApplication.getCurUserName(),
-                String.valueOf(BaseParamas.STATE_UPLOAD_FAILED));
+        List<LogEntity> logEntityList = DatabaseUtils.getLogListWithoutUpload(this, BaseApplication.getCurUserName());
 
         if(logEntityList == null || logEntityList.size() == 0){
             return;
