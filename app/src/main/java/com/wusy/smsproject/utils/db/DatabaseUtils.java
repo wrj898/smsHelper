@@ -96,12 +96,46 @@ public class DatabaseUtils {
         return resultList;
     }
 
+    public static List<LogEntity> getLogListWithoutUpload(Context context, String userKey){
+        SQLiteDatabase database = getSQLiteDatabase(context);
+
+        Cursor cursor = database.query(MySqliteHelper.TABLE_LOG, new String[]{"bankcode","bankname","money","time","cardnumber","userkey","state"},
+                "userkey=? AND ( state=? OR state=? )", new String[]{userKey, String.valueOf(BaseParamas.STATE_UPLOAD_FAILED),
+                        String.valueOf(BaseParamas.STATE_WITHOUT_UPLOAD)}, null, null, null);
+
+        int bankcodeIndex = cursor.getColumnIndex("bankcode");
+        int banknameIndex = cursor.getColumnIndex("bankname");
+        int moneyIndex = cursor.getColumnIndex("money");
+        int timeIndex = cursor.getColumnIndex("time");
+        int cardnumberIndex = cursor.getColumnIndex("cardnumber");
+        int userkeyIndex = cursor.getColumnIndex("userkey");
+        int stateIndex = cursor.getColumnIndex("state");
+
+        List<LogEntity> resultList = new ArrayList<>();
+
+        while(cursor.moveToNext()){
+            LogEntity logEntity = new LogEntity();
+            logEntity.setBankCode(cursor.getString(bankcodeIndex));
+            logEntity.setBankName(cursor.getString(banknameIndex));
+            logEntity.setMoney(cursor.getString(moneyIndex));
+            logEntity.setTime(cursor.getString(timeIndex));
+            logEntity.setCardNumber(cursor.getString(cardnumberIndex));
+            logEntity.setUserKey(cursor.getString(userkeyIndex));
+            logEntity.setState(cursor.getInt(stateIndex));
+            resultList.add(logEntity);
+        }
+
+        database.close();
+
+        return resultList;
+    }
+
 
     public static List<LogEntity> getLogListWithState(Context context, String userKey, String state){
         SQLiteDatabase database = getSQLiteDatabase(context);
 
         Cursor cursor = database.query(MySqliteHelper.TABLE_LOG, new String[]{"bankcode","bankname","money","time","cardnumber","userkey","state"},
-                "userkey=? AND ( state=? OR state=? )", new String[]{userKey, state, String.valueOf(BaseParamas.STATE_WITHOUT_UPLOAD)}, null, null, null);
+                "userkey=? AND state=?", new String[]{userKey, state}, null, null, null);
 
         int bankcodeIndex = cursor.getColumnIndex("bankcode");
         int banknameIndex = cursor.getColumnIndex("bankname");
