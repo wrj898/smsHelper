@@ -352,7 +352,7 @@ private void startRepeatingTask(){
     AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
     if(alarmManager != null){
         alarmManager.cancel(operation);
-        alarmManager.setWindow(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60 * 1000, 1000, operation);
+        alarmManager.setWindow(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60 * 1000, 30 * 1000, operation);
 //            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 60 * 1000, operation);
     }
 }
@@ -364,7 +364,7 @@ private void startRepeatingTask(){
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         if(alarmManager != null){
             alarmManager.cancel(operation);
-            alarmManager.setWindow(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 60 * 1000, 60 * 1000, operation);
+            alarmManager.setWindow(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 10 * 60 * 1000, 60 * 1000, operation);
 //            alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), 60 * 1000, operation);
         }
     }
@@ -379,8 +379,8 @@ private void startRepeatingTask(){
 
         @Override
         public void onReceive(Context context, Intent intent) {
-//            startRepeatingVerify();
-            Log.e("wusy", "verifyAccout");
+            startRepeatingVerify();
+//            Log.e("wusy", "verifyAccout");
         }
     }
 
@@ -395,9 +395,9 @@ private void startRepeatingTask(){
 
         @Override
         public void onReceive(Context context, Intent intent) {
-//            startUploadTask();
+            startUploadTask();
             startRepeatingTask();
-            Log.e("wusy", "UploadReceiver");
+//            Log.e("wusy", "UploadReceiver");
         }
     }
 
