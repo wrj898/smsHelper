@@ -1,6 +1,7 @@
 package com.wusy.smsproject.ui;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -37,6 +38,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText etUserName;
     private EditText etPassword;
     private CheckBox cbRember;
+    private ProgressDialog loadingDialog;
 
     // 短信权限请求码
     private final static int REQUEST_SMS_CODE = 300;
@@ -67,7 +69,9 @@ public class LoginActivity extends AppCompatActivity {
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                loginAccout();
+                if(!isFastClick()){
+                    loginAccout();
+                }
             }
         });
     }
@@ -96,6 +100,7 @@ public class LoginActivity extends AppCompatActivity {
             Toast.makeText(LoginActivity.this, "密码不能为空", Toast.LENGTH_SHORT).show();
             return;
         }
+        showLoadingDialog();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BaseParamas.BASE_URL) // 设置 网络请求 Url
                 .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
@@ -110,6 +115,7 @@ public class LoginActivity extends AppCompatActivity {
             //请求成功时回调
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
+                hideLoadingDailog();
                 if(response.body() == null){
                     Toast.makeText(LoginActivity.this, "登录账户 网络请求错误", Toast.LENGTH_SHORT).show();
                     return;
@@ -139,6 +145,7 @@ public class LoginActivity extends AppCompatActivity {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
+                hideLoadingDailog();
                 Toast.makeText(LoginActivity.this, "请求失败 : " + throwable.getMessage() , Toast.LENGTH_SHORT).show();
             }
         });
@@ -146,6 +153,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
     public void verifyAccout(String token){
+        showLoadingDialog();
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BaseParamas.BASE_URL) // 设置 网络请求 Url
                 .addConverterFactory(GsonConverterFactory.create()) //设置使用Gson解析(记得加入依赖)
@@ -157,6 +165,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
+                hideLoadingDailog();
                 if(response.body() == null){
                     Toast.makeText(LoginActivity.this, "验证token 网络请求错误", Toast.LENGTH_SHORT).show();
                     return;
@@ -178,6 +187,7 @@ public class LoginActivity extends AppCompatActivity {
             //请求失败时回调
             @Override
             public void onFailure(Call<HttpResult> call, Throwable throwable) {
+                hideLoadingDailog();
                 Toast.makeText(LoginActivity.this, "验证token 请求失败 : " + throwable.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -220,6 +230,38 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(LoginActivity.this, "请在设置中打开短信权限", Toast.LENGTH_LONG).show();
                 finish();
             }
+        }
+    }
+
+
+    public void showLoadingDialog() {
+        if(loadingDialog == null){
+            loadingDialog = new ProgressDialog(this);
+//        mDefaultDialog.setProgressStyle(android.app.ProgressDialog.STYLE_SPINNER); //默认就是小圆圈的那种形式
+            loadingDialog.setMessage("正在请求...");
+//        mDefaultDialog.setCancelable(true);//默认true
+            loadingDialog.setCanceledOnTouchOutside(false);//默认true
+        }
+        if(!loadingDialog.isShowing()){
+            loadingDialog.show();
+        }
+    }
+
+    public void hideLoadingDailog(){
+        if(loadingDialog != null && loadingDialog.isShowing()){
+            loadingDialog.dismiss();
+        }
+    }
+
+
+    private long clickTime = 0;
+
+    private boolean isFastClick() {
+        if ((System.currentTimeMillis() - clickTime) < 1000) {
+            return true;
+        } else {
+            clickTime = System.currentTimeMillis();
+            return false;
         }
     }
 }
