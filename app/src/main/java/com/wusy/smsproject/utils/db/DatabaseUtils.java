@@ -5,6 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
+import android.util.Log;
+
 import com.wusy.smsproject.base.BaseParamas;
 
 import com.wusy.smsproject.entity.BankCardEntity;
@@ -28,6 +30,7 @@ public class DatabaseUtils {
     }
 
     public static void updateLog(Context context, LogEntity logEntity){
+        Log.e("wusy","updateLog  time = " + logEntity.getTime() + " , getStateStr = " + logEntity.getStateStr());
         SQLiteDatabase database = getSQLiteDatabase(context);
 
         ContentValues contentValues = new ContentValues();
@@ -43,6 +46,7 @@ public class DatabaseUtils {
     }
 
     public static void insertLog(Context context, LogEntity logEntity){
+        Log.e("wusy","insertLog  time = " + logEntity.getTime());
         SQLiteDatabase database = getSQLiteDatabase(context);
 
         ContentValues contentValues = new ContentValues();
@@ -54,7 +58,8 @@ public class DatabaseUtils {
         contentValues.put("userkey", logEntity.getUserKey());
         contentValues.put("state", logEntity.getState());
 
-        database.insert(MySqliteHelper.TABLE_LOG, null,contentValues);
+        database.insertWithOnConflict(MySqliteHelper.TABLE_LOG, null,contentValues,SQLiteDatabase.CONFLICT_IGNORE);
+//        database.insert(MySqliteHelper.TABLE_LOG, null,contentValues);
         database.close();
     }
 

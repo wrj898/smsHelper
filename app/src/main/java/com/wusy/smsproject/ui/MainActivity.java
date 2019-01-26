@@ -24,6 +24,7 @@ import android.support.v4.content.ContextCompat;
 import android.telephony.SmsMessage;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -36,6 +37,7 @@ import com.wusy.smsproject.entity.HttpResultOfBankList;
 import com.wusy.smsproject.entity.LogEntity;
 import com.wusy.smsproject.entity.LogTaskEntity;
 import com.wusy.smsproject.entity.NewBankCardEntity;
+import com.wusy.smsproject.entity.UserInfo;
 import com.wusy.smsproject.httpinterfaces.CallBackInterface;
 import com.wusy.smsproject.httpinterfaces.PostInterface;
 import com.wusy.smsproject.utils.BankUtils;
@@ -73,13 +75,21 @@ public class MainActivity extends FragmentActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if(savedInstanceState != null){
+            savedInstanceState.remove("android:support:fragments");
+            savedInstanceState.remove("android:fragments");
+        }
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         BottomNavigationView navigation = findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
-        checkSMSPerssion();
+        if(BaseApplication.curUser == null){
+            verifyAccout(true);
+        }else{
+            checkSMSPerssion();
+        }
 
     }
 
@@ -291,7 +301,7 @@ public class MainActivity extends FragmentActivity {
                     logTaskEntity.setCallback(new CallBackInterface() {
                         @Override
                         public void uploadTaskCallback(LogEntity logEntity, int resultCode) {
-                            Log.e("wusy","resultCode = " + resultCode);
+                            Log.e("wusy","SmsReceiver  resultCode = " + resultCode + "  , logEntity time = " + logEntity.getTime());
                             if(resultCode == BaseParamas.REQUEST_SUCCESS){
                                 logEntity.setState(BaseParamas.STATE_UPLOAD);
                                 DatabaseUtils.updateLog(BaseApplication.getCurApplicationContext(), logEntity);
@@ -379,6 +389,7 @@ private void startRepeatingTask(){
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            verifyAccout(false);
             startRepeatingVerify();
 //            Log.e("wusy", "verifyAccout");
         }
@@ -417,6 +428,7 @@ private void startRepeatingTask(){
             logTaskEntity.setCallback(new CallBackInterface() {
                 @Override
                 public void uploadTaskCallback(LogEntity logEntity, int resultCode) {
+                    Log.e("wusy","startUploadTask  resultCode = " + resultCode + "  , logEntity time = " + logEntity.getTime());
                     if(resultCode == BaseParamas.REQUEST_SUCCESS){
                         logEntity.setState(BaseParamas.STATE_UPLOAD);
                         DatabaseUtils.updateLog(BaseApplication.getCurApplicationContext(), logEntity);
@@ -467,7 +479,11 @@ private void startRepeatingTask(){
         finish();
     }
 
-    public void verifyAccout(){
+    /**
+     * 被系统回收后，进入重新验证一下账户
+     * @param isRestart 是否被系统回收
+     */
+    public void verifyAccout(final boolean isRestart){
         String localToken = SPUtils.getStringParam(MainActivity.this, SPUtils.KEY_TOKEN);
         // TOKEN 如果为空，则是出现异常，返回重新登录
         if(TextUtils.isEmpty(localToken)){
@@ -488,6 +504,16 @@ private void startRepeatingTask(){
             public void onResponse(Call<HttpResult> call, Response<HttpResult> response) {
                 if(response.body() != null && response.body().getCode() == BaseParamas.REQUEST_SUCCESS){
                     SPUtils.saveParam(MainActivity.this, SPUtils.KEY_TOKEN, response.body().getToken());
+                    if(isRestart){
+                        UserInfo userInfo = new UserInfo();
+                        userInfo.setUserName(response.body().getUser_name());
+                        userInfo.setToken(response.body().getToken());
+                        userInfo.setMoney(response.body().getBalance());
+                        userInfo.setRate(response.body().getFees());
+                        userInfo.setId(response.body().getUser_id());
+                        BaseApplication.curUser = userInfo;
+                        checkSMSPerssion();
+                    }
                 }else{
                     // 返回结果失败的话，直接返回登录页面重新登录
                     toLoginActivity(true);
@@ -633,6 +659,9 @@ private void startRepeatingTask(){
             if(System.currentTimeMillis() - lastDestoryTime > dayMills){
                 // 如果上次退出 超过一天的时间，就只读取一天内的短信
                 lastDestoryTime = System.currentTimeMillis() - dayMills;
+            }else{
+                // 防止意外回收多加入一个关闭前的1小时短信
+                lastDestoryTime = System.currentTimeMillis() - 60 * 60 * 1000;
             }
             // 筛选条件
             String condition = " date >  " + String.valueOf(lastDestoryTime);
@@ -694,6 +723,35 @@ private void startRepeatingTask(){
             Log.d("LogFragment", "读取短信结束");
         } catch (SQLiteException ex) {
             Log.d("SQLiteException", ex.getMessage());
+        }
+    }
+
+
+
+    private long clickTime = 0;
+
+    @Override
+    public void onBackPressed() {
+        exit();
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // 是否触发按键为back键
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            onBackPressed();
+            return true;
+        } else { // 如果不是back键正常响应
+            return super.onKeyDown(keyCode, event);
+        }
+    }
+
+    private void exit() {
+        if ((System.currentTimeMillis() - clickTime) > 2000) {
+            Toast.makeText(this, "再按一次后退键退出程序", Toast.LENGTH_SHORT).show();
+            clickTime = System.currentTimeMillis();
+        } else {
+            this.finish();
         }
     }
 }

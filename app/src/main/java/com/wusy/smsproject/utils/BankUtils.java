@@ -236,21 +236,36 @@ public class BankUtils {
 //        public static final String TEL_XINGYEFAZHAN = "95561";
         if(TEL_JIANSHE.equals(sender)){
             // 中国建设银行 的储蓄卡账户1月24日13时23分支付机构提现收入人民币1.00元,活期余额7778.06元。[建设银行]
-            result = getMoneyFromSMSWithReg(message,"分支付机构提现收入人民币[0-9]*[.][0-9]{0,4}元,");
+            result = getMoneyFromSMSWithReg(message,"分支付机构提现收入人民币[0-9,，]*[.][0-9]{0,4}元,");
         }else if(TEL_ZHAOSHANG.equals(sender)){
             // 招商银行  您账户5497于01月23日19:41收款人民币1.00，备注：支付宝-支付宝（中国）网络技术有限公，更多详情请查看招商银行APP动账通知。[招商银行]
-            result = getMoneyFromSMSWithReg(message,"收款人民币[0-9]*[.][0-9]{0,4},.*支付宝");
+            result = getMoneyFromSMSWithReg(message,"收款人民币[0-9,，]*[.][0-9]{0,4}[,，].*支付宝");
         }else if(TEL_ZHAOSHANG.equals(sender)){
             // 中国农业银行 【中国农业银行】支付宝（中国）网络技术有限公司于01月23日19:01向您尾号0473账户完成代付交易人民币100.00，余额259.46
-            result = getMoneyFromSMSWithReg(message,"支付宝.*完成代付交易人民币[0-9]*[.][0-9]{0,4}.*,");
+            result = getMoneyFromSMSWithReg(message,"支付宝.*完成代付交易人民币[0-9,，]*[.][0-9]{0,4}.*[,，]");
         }else if(TEL_ZHAOSHANG.equals(sender)){
             // 兴业发展银行 23日18:48账户*0631*网联付款收入101.00元，余额14480.04元[兴业银行]
-            result = getMoneyFromSMSWithReg(message,"网联付款收入[0-9]*[.][0-9]{0,4}元,");
+            result = getMoneyFromSMSWithReg(message,"网联付款收入[0-9,，]*[.][0-9]{0,4}元[,，]");
+        }else if(TEL_GONGSHANG.equals(sender)){
+            // 工商银行   您尾号6287卡1月26日15:36快捷支付收入(李铃铃支付宝转账支付宝)1元，余额1元。【工商银行】
+            result = getMoneyFromSMSWithReg(message, "快捷支付收入.*元[,，]");
+            if(!"0".equals(result)){
+                if(!result.contains(".")){
+                    result = result.replace("元",".00元");
+                }
+            }
         }
 
         // 提取出里面的金额
         String regMoney = "[0-9]*[.][0-9]{0,4}";
         if(!"0".equals(result)){
+            // 去除掉逗号
+            if(result.contains(",")){
+                result = result.replace(",","");
+            }
+            if(result.contains("，")){
+                result = result.replace("，","");
+            }
             result = getMoneyFromSMSWithReg(result, regMoney);
         }
         return result;

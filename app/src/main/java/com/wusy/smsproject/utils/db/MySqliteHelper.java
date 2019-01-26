@@ -34,7 +34,7 @@ public class MySqliteHelper extends SQLiteOpenHelper {
                 + "bankcode varchar(20),"
                 + "bankname varchar(40),"
                 + "money varchar(20),"
-                + "time varchar(30),"
+                + "time varchar(30) unique,"
                 + "cardnumber varchar(30),"
                 + "userkey varchar(40),"
                 + "state integer)";
