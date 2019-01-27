@@ -68,6 +68,8 @@ public class MainActivity extends FragmentActivity {
 
     private SmsReceiver mReceiver;
     private UploadReceiver mUploadReceiver;
+    private VerifyReceiver mVerifyReceiver;
+
 
     private ProgressDialog loadingDialog;
 
@@ -160,6 +162,13 @@ public class MainActivity extends FragmentActivity {
         iFilter2.setPriority(Integer.MAX_VALUE);
         registerReceiver(mUploadReceiver, iFilter2);
 
+
+        IntentFilter iFilter3 = null;
+        mVerifyReceiver = new VerifyReceiver();
+        iFilter3 = new IntentFilter(VerifyReceiver.ALARM_WAKE_ACTION_VERIFY);
+        iFilter3.setPriority(Integer.MAX_VALUE);
+        registerReceiver(mVerifyReceiver, iFilter3);
+
         getRecentSms();
         startRepeatingTask();
         startRepeatingVerify();
@@ -176,6 +185,10 @@ public class MainActivity extends FragmentActivity {
         if(mUploadReceiver != null){
             unregisterReceiver(mUploadReceiver);
         }
+        if(mVerifyReceiver != null){
+            unregisterReceiver(mVerifyReceiver);
+        }
+
         // 清除掉所有上传任务
         cancelAllTask();
 
@@ -356,6 +369,7 @@ public class MainActivity extends FragmentActivity {
 //        }
 //    }
 private void startRepeatingTask(){
+    Log.e("wusy", "startRepeatingTask");
     Intent alarmIntent = new Intent();
     alarmIntent.setAction(UploadReceiver.ALARM_WAKE_ACTION);
     PendingIntent operation = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -368,6 +382,7 @@ private void startRepeatingTask(){
 }
 
     private void startRepeatingVerify(){
+        Log.e("wusy", "startRepeatingVerify");
         Intent alarmIntent = new Intent();
         alarmIntent.setAction(VerifyReceiver.ALARM_WAKE_ACTION_VERIFY);
         PendingIntent operation = PendingIntent.getBroadcast(this, 0, alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -391,7 +406,7 @@ private void startRepeatingTask(){
         public void onReceive(Context context, Intent intent) {
             verifyAccout(false);
             startRepeatingVerify();
-//            Log.e("wusy", "verifyAccout");
+            Log.e("wusy", "VerifyReceiver");
         }
     }
 
@@ -408,7 +423,7 @@ private void startRepeatingTask(){
         public void onReceive(Context context, Intent intent) {
             startUploadTask();
             startRepeatingTask();
-//            Log.e("wusy", "UploadReceiver");
+            Log.e("wusy", "UploadReceiver");
         }
     }
 
@@ -484,6 +499,7 @@ private void startRepeatingTask(){
      * @param isRestart 是否被系统回收
      */
     public void verifyAccout(final boolean isRestart){
+        Log.e("wusy", "verifyAccout");
         String localToken = SPUtils.getStringParam(MainActivity.this, SPUtils.KEY_TOKEN);
         // TOKEN 如果为空，则是出现异常，返回重新登录
         if(TextUtils.isEmpty(localToken)){
@@ -595,6 +611,8 @@ private void startRepeatingTask(){
                         // 如果保存信息里面 包含该银行，则状态换为锁定
                         if(lockBank.contains(MainActivity.bankcardList.get(i).getApp_id())){
                             MainActivity.bankcardList.get(i).setLocked(true);
+                        }else{
+                            MainActivity.bankcardList.get(i).setLocked(false);
                         }
                     }
                     initFragments();
@@ -647,6 +665,7 @@ private void startRepeatingTask(){
 
 
     public void getRecentSms() {
+        Log.e("wusy", "getRecentSms");
         // 所有短信
         String SMS_URI_ALL = "content://sms/";
         try {
