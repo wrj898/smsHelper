@@ -169,7 +169,7 @@ public class MainActivity extends FragmentActivity {
         iFilter3.setPriority(Integer.MAX_VALUE);
         registerReceiver(mVerifyReceiver, iFilter3);
 
-        getRecentSms();
+//        getRecentSms();
         startRepeatingTask();
         startRepeatingVerify();
 
